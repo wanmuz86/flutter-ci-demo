@@ -50,7 +50,7 @@ jobs:
           API_URL: ${{ matrix.apiUrl }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: flutter-app-${{ matrix.environment }}
           path: build/app/outputs/flutter-apk/*.apk
