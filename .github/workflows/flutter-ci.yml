@@ -1,0 +1,56 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]
+        apiUrl:
+          - "https://dev.example.com"
+          - "https://staging.example.com"
+          - "https://prod.example.com"
+    env:
+      API_URL: ${{ matrix.apiUrl }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Cache Pub packages
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.temp }}/pub_cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Build Flutter app for ${{ matrix.environment }}
+        run: |
+          flutter pub get
+          flutter build apk --flavor ${{ matrix.environment }} --dart-define=API_URL=${{ matrix.apiUrl }}
+        env:
+          API_URL: ${{ matrix.apiUrl }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: flutter-app-${{ matrix.environment }}
+          path: build/app/outputs/flutter-apk/*.apk
